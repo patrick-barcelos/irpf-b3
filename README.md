@@ -1,0 +1,1 @@
+# IRPF B3 Skill\nSkill para o Gemini CLI que processa extratos da B3 para o IRPF.\n\n## Instalação\n1. Baixe o arquivo `irpf-b3.skill`\n2. Execute: `gemini skills install irpf-b3.skill --scope user`\n3. No Gemini CLI, rode `/skills reload`
