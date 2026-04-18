@@ -56,7 +56,7 @@ class IRPFManager:
                     pm = self.portfolio[ticker]['custo_total'] / self.portfolio[ticker]['quantidade']
                     self.portfolio[ticker]['quantidade'] -= qtd
                     self.portfolio[ticker]['custo_total'] -= (qtd * pm)
-            elif 'DIVIDENDO' in tipo:
+            elif 'DIVIDENDO' in tipo or 'RENDIMENTO' in tipo:
                 self.portfolio[ticker]['dividendos'] += valor_total
             elif 'JUROS SOBRE CAPITAL' in tipo:
                 self.portfolio[ticker]['jcp'] += valor_total

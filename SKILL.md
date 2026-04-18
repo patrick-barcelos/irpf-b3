@@ -1,30 +1,28 @@
 ---
 name: irpf-b3
-description: Processa extratos da B3 e mescla os dados (Bens, Dividendos, JCP) diretamente no arquivo XML da declaração do IRPF.
+description: Processa extratos da B3, mescla dados no XML do IRPF e gera dashboards visuais, seguindo as normas oficiais da Receita Federal 2026.
 ---
 
-# IRPF B3 - Assistente de Integração Total
+# IRPF B3 - Assistente de Integração e Conformidade 2026
 
-Esta skill automatiza o processamento de investimentos e a atualização do arquivo de declaração da Receita Federal.
+Esta skill automatiza o processamento de investimentos e a atualização do arquivo de declaração da Receita Federal, mantendo o estilo de preenchimento do usuário e as normas oficiais.
 
 ## Quando usar
-- Para processar arquivos Excel da B3.
+- Para processar arquivos Excel da B3 e gerar Dashboards visuais.
 - Para **atualizar um XML existente** do IRPF com novos dados de investimentos.
 
 ## Como usar (Workflow)
 1. **Coleta:** O usuário fornece o Excel da B3 e o XML da declaração (opcional).
-2. **Processamento:** Execute `scripts/process_b3.py <arquivo_excel> <arquivo_xml>`.
-3. **Resultado:** 
-   - Resumo no terminal (Compra, Venda, Proventos).
-   - Arquivo `declaracao_atualizada.xml` pronto para importação no programa do IRPF.
+2. **Consultar Normas:** Sempre verifique `references/normas_receita_2026.md` para garantir que os limites e códigos estão corretos antes de sugerir ações.
+3. **Executar Processamento:** Execute `scripts/process_b3.py <arquivo_excel> <arquivo_xml>`.
+4. **Resultado:** 
+   - Dashboard HTML Interativo.
+   - Arquivo `declaracao_atualizada.xml` pronto para importação.
 
-## Regras de Negócio Inclusas
-- **Custo Médio:** Calculado cronologicamente.
-- **Merge Inteligente:** Se o ativo já existir no XML, ele apenas atualiza o valor. Se não existir, ele cria um novo registro.
-- **Proventos:** Identifica Dividendos (Isentos) e JCP (Tributação Exclusiva).
+## Recursos Offline
+- **Normas Receita 2026:** Guia completo de limites, códigos e prazos em `references/normas_receita_2026.md`.
 
-## Importação no Programa IRPF
-Após gerar o XML atualizado:
-1. Abra o Programa IRPF 2026.
-2. Vá em **Ferramentas** > **Importar Dados de Arquivo XML**.
-3. Selecione o arquivo gerado pela skill.
+## Regras de Inteligência
+- **Estilo:** O script detecta automaticamente se o usuário usa UPPERCASE ou Title Case e mimetiza esse comportamento.
+- **Merge:** Se o ativo já existir no XML, apenas o valor é atualizado; a descrição original é preservada.
+- **FIIs:** Rendimentos de FIIs são somados automaticamente aos proventos isentos.
