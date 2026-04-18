@@ -1,28 +1,30 @@
 ---
 name: irpf-b3
-description: Processa extratos de movimentação da B3 (Excel) para gerar relatórios mastigados para o IRPF (Bens e Direitos, Dividendos e JCP).
+description: Processa extratos da B3 e mescla os dados (Bens, Dividendos, JCP) diretamente no arquivo XML da declaração do IRPF.
 ---
 
-# IRPF B3 - Assistente de Declaração
+# IRPF B3 - Assistente de Integração Total
 
-Esta skill ajuda a transformar o extrato de movimentação oficial da B3 em dados prontos para o programa do IRPF.
+Esta skill automatiza o processamento de investimentos e a atualização do arquivo de declaração da Receita Federal.
 
 ## Quando usar
-- Quando o usuário fornecer um arquivo Excel (.xlsx) baixado da Área do Investidor B3.
-- Quando for necessário calcular Preço Médio ou consolidar Proventos (Dividendos/JCP) do ano-calendário.
+- Para processar arquivos Excel da B3.
+- Para **atualizar um XML existente** do IRPF com novos dados de investimentos.
 
-## Fluxo de Trabalho
-1. **Identificar o Arquivo:** Verifique se o arquivo contém colunas como 'Produto', 'Movimentação', 'Quantidade' e 'Valor da Operação'.
-2. **Executar Processamento:** Utilize o script `scripts/process_b3.py` para processar os dados.
-3. **Gerar Relatório:** Formate a saída seguindo os códigos da Receita Federal:
-    - **Ações:** Grupo 03, Código 01.
-    - **FIIs:** Grupo 07, Código 03.
-    - **ETFs:** Grupo 07, Código 09.
-    - **BDRs:** Grupo 04, Código 04.
+## Como usar (Workflow)
+1. **Coleta:** O usuário fornece o Excel da B3 e o XML da declaração (opcional).
+2. **Processamento:** Execute `scripts/process_b3.py <arquivo_excel> <arquivo_xml>`.
+3. **Resultado:** 
+   - Resumo no terminal (Compra, Venda, Proventos).
+   - Arquivo `declaracao_atualizada.xml` pronto para importação no programa do IRPF.
 
-## Scripts Inclusos
-- `process_b3.py`: Recebe o caminho do Excel e imprime o resumo de Bens e Direitos e Proventos.
+## Regras de Negócio Inclusas
+- **Custo Médio:** Calculado cronologicamente.
+- **Merge Inteligente:** Se o ativo já existir no XML, ele apenas atualiza o valor. Se não existir, ele cria um novo registro.
+- **Proventos:** Identifica Dividendos (Isentos) e JCP (Tributação Exclusiva).
 
-## Códigos de Proventos no IRPF
-- **Dividendos / Rendimentos FII:** Ficha "Rendimentos Isentos e Não Tributáveis".
-- **JCP:** Ficha "Rendimentos Sujeitos à Tributação Exclusiva/Definitiva" (Código 10).
+## Importação no Programa IRPF
+Após gerar o XML atualizado:
+1. Abra o Programa IRPF 2026.
+2. Vá em **Ferramentas** > **Importar Dados de Arquivo XML**.
+3. Selecione o arquivo gerado pela skill.
