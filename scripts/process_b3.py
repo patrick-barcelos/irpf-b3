@@ -9,6 +9,7 @@ class IRPFManager:
         self.xml_path = xml_path
         self.portfolio = {}
         self.df_b3 = None
+        self.user_case_style = "upper" # Default
 
     def load_b3_data(self):
         try:
@@ -20,6 +21,25 @@ class IRPFManager:
         except Exception as e:
             print(f"Erro ao carregar Excel: {e}")
             return False
+
+    def _detect_style(self, root):
+        """Detecta se o usuário prefere UPPERCASE ou Title Case baseado nos bens existentes"""
+        texts = []
+        for disc in root.findall('.//discriminacao'):
+            if disc.text: texts.append(disc.text)
+        
+        if not texts: return
+        
+        uppers = sum(1 for t in texts if t.isupper())
+        if uppers / len(texts) > 0.5:
+            self.user_case_style = "upper"
+        else:
+            self.user_case_style = "title"
+
+    def _format_text(self, text):
+        if self.user_case_style == "upper":
+            return text.upper()
+        return text.title()
 
     def process_calculations(self):
         for _, row in self.df_b3.iterrows():
@@ -49,25 +69,24 @@ class IRPFManager:
                 self.portfolio[ticker]['jcp'] += valor_total
 
     def _get_asset_type(self, ticker):
-        """Identifica grupo/código baseado no ticker"""
-        if ticker.endswith('11'): 
-            return ("07", "03") # FII / ETF (simplificado)
-        return ("03", "01") # Ações
+        if ticker.endswith('11'): return ("07", "03")
+        return ("03", "01")
 
     def merge_with_xml(self, output_path):
         if not self.xml_path or not os.path.exists(self.xml_path): return
 
         tree = ET.parse(self.xml_path)
         root = tree.getroot()
+        self._detect_style(root)
+        
         bens_section = root.find('.//bensEDireitos')
         if bens_section is None: bens_section = ET.SubElement(root, 'bensEDireitos')
 
-        print("\n--- ANALISANDO INTEGRAÇÃO XML ---")
+        print(f"--- ESTILO DETECTADO: {self.user_case_style.upper()} ---")
         
         for ticker, data in self.portfolio.items():
             if data['quantidade'] <= 0: continue
             
-            # Busca por ticker na discriminação (Regex para evitar PETR3 vs PETR4)
             found_bem = None
             for bem in bens_section.findall('bem'):
                 disc = bem.find('discriminacao').text if bem.find('discriminacao') is not None else ""
@@ -76,32 +95,27 @@ class IRPFManager:
                     break
 
             if found_bem is not None:
-                old_val = found_bem.find('valorAtual').text if found_bem.find('valorAtual') is not None else "0.00"
+                # PRESERVAÇÃO: Não altera a descrição, apenas o valor
                 new_val = f"{data['custo_total']:.2f}"
-                if old_val != new_val:
-                    print(f"[ATUALIZANDO] {ticker}: R$ {old_val} -> R$ {new_val} (Custo Médio)")
-                    found_bem.find('valorAtual').text = new_val
-                    # Opcional: Adicionar nota na discriminação
-                    disc_elem = found_bem.find('discriminacao')
-                    if "[B3-SKILL]" not in disc_elem.text:
-                        disc_elem.text += f" [B3-SKILL: Custo Médio Atualizado em {datetime.now().strftime('%d/%m/%Y')}]"
-                else:
-                    print(f"[OK] {ticker}: Valor já está correto.")
+                found_bem.find('valorAtual').text = new_val
+                print(f"[ATUALIZADO] {ticker} (Descrição preservada)")
             else:
-                print(f"[NOVO ATIVO] {ticker}: Adicionando à ficha de Bens e Direitos.")
+                # NOVO: Segue o padrão de case detectado
+                print(f"[NOVO] {ticker} (Seguindo padrão {self.user_case_style})")
                 grupo, codigo = self._get_asset_type(ticker)
                 novo_bem = ET.SubElement(bens_section, 'bem')
                 ET.SubElement(novo_bem, 'grupo').text = grupo
                 ET.SubElement(novo_bem, 'codigo').text = codigo
-                ET.SubElement(novo_bem, 'discriminacao').text = f"{data['nome_completo']} - Qtd: {data['quantidade']} [Adicionado via B3-SKILL]"
+                
+                desc = f"{data['nome_completo']} - QTD: {data['quantidade']} [B3-SKILL]"
+                ET.SubElement(novo_bem, 'discriminacao').text = self._format_text(desc)
                 ET.SubElement(novo_bem, 'valorAnterior').text = "0.00"
                 ET.SubElement(novo_bem, 'valorAtual').text = f"{data['custo_total']:.2f}"
 
         tree.write(output_path, encoding='utf-8', xml_declaration=True)
-        print(f"\n✅ XML gerado: {output_path}")
+        print(f"\n✅ XML gerado com sucesso preservando seu estilo!")
 
 if __name__ == "__main__":
-    from datetime import datetime
     import sys
     if len(sys.argv) < 2:
         print("Uso: python process_b3.py <excel_b3> [xml_irpf]")
