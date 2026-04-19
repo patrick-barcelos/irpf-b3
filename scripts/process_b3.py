@@ -17,7 +17,6 @@ class IRPFManager:
         self.user_nome = "PATRICK CRISTIAN BARCELOS"
         self.dash_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "dashboard")
         
-        # Base de CNPJs (Mapping Ticker -> CNPJ)
         self.cnpj_map = {
             'PETR4': '33.000.167/0001-01', 'PETR3': '33.000.167/0001-01',
             'VALE3': '33.592.510/0001-54',
@@ -28,26 +27,16 @@ class IRPFManager:
             'BBSE3': '17.344.597/0001-94',
             'CMIG4': '17.155.730/0001-64', 'CMIG3': '17.155.730/0001-64',
             'SAPR4': '76.484.013/0001-45', 'SAPR3': '76.484.013/0001-45',
-            'EZTC3': '08.312.229/0001-73',
-            'WEGE3': '84.429.695/0001-11',
-            'XPLG11': '26.502.794/0001-85',
-            'HGPO11': '11.260.134/0001-68',
-            'KNCR11': '16.706.958/0001-32',
-            'VISC11': '17.554.274/0001-25',
-            'MXRF11': '97.521.225/0001-25',
-            'CPTS11': '18.979.895/0001-13',
-            'AURE3': '28.594.234/0001-23',
-            'CXSE3': '22.543.331/0001-00',
-            'TASA3': '92.781.335/0001-02',
-            'BHIA3': '33.041.260/0652-90',
-            'MGLU3': '47.960.950/0001-21',
-            'TOTS3': '53.113.791/0001-22',
-            'ITSA4': '61.532.644/0001-15',
-            'IRDM11': '28.830.325/0001-10',
-            'ALZR11': '28.737.771/0001-85',
-            'TRXF11': '28.548.288/0001-52',
-            'XPML11': '28.757.546/0001-00',
-            'BTHF11': '45.188.176/0001-57'
+            'EZTC3': '08.312.229/0001-73', 'WEGE3': '84.429.695/0001-11',
+            'XPLG11': '26.502.794/0001-85', 'HGPO11': '11.260.134/0001-68',
+            'KNCR11': '16.706.958/0001-32', 'VISC11': '17.554.274/0001-25',
+            'MXRF11': '97.521.225/0001-25', 'CPTS11': '18.979.895/0001-13',
+            'AURE3': '28.594.234/0001-23', 'CXSE3': '22.543.331/0001-00',
+            'TASA3': '92.781.335/0001-02', 'BHIA3': '33.041.260/0652-90',
+            'MGLU3': '47.960.950/0001-21', 'TOTS3': '53.113.791/0001-22',
+            'ITSA4': '61.532.644/0001-15', 'IRDM11': '28.830.325/0001-10',
+            'ALZR11': '28.737.771/0001-85', 'TRXF11': '28.548.288/0001-52',
+            'XPML11': '28.757.546/0001-00', 'BTHF11': '45.188.176/0001-57'
         }
 
     def _clean_value(self, val):
@@ -61,8 +50,17 @@ class IRPFManager:
         match = re.search(r'\b([A-Z]{4}[345611]{1,2})\b', str(text).upper())
         return match.group(1) if match else None
 
+    def _init_asset(self, ticker, nome=""):
+        if ticker not in self.portfolio:
+            self.portfolio[ticker] = {
+                'nome': nome or ticker, 'v23_dec': 0.0, 'v24_dec': 0.0, 'q24_dec': 0,
+                'q24_final': 0, 'v24_final': 0, 'q25_final': 0, 'v25_final': 0,
+                'div_25': 0, 'jcp_25': 0, 'q_start': 0, 'c_start': 0
+            }
+
     def parse_dec_file(self):
         if not self.dec_path or not os.path.exists(self.dec_path): return
+        print(f"--- LENDO DECLARAÇÃO (.DEC) ---")
         with open(self.dec_path, 'r', encoding='latin-1') as f:
             for line in f:
                 if line.startswith('16'): self.user_nome = line[13:73].strip()
@@ -74,17 +72,14 @@ class IRPFManager:
                     vals = re.findall(r'(\d{13})', line)
                     v_2023 = float(vals[-2]) / 100.0 if len(vals) >= 2 else 0.0
                     v_2024_dec = float(vals[-1]) / 100.0 if len(vals) >= 1 else 0.0
-                    qtd_ini = int(qtd_match.group(1)) if qtd_match else 0
-                    if key not in self.portfolio:
-                        self.portfolio[key] = {'qtd': qtd_ini, 'custo': v_2023, 'nome': desc, 'v24_dec': v_2024_dec, 'v24': 0, 'q24': 0, 'v25': 0, 'q25': 0, 'dividendos': 0, 'jcp': 0}
-                    else:
-                        self.portfolio[key]['qtd'] += qtd_ini; self.portfolio[key]['custo'] += v_2023; self.portfolio[key]['v24_dec'] += v_2024_dec
+                    qtd_2024_dec = int(qtd_match.group(1)) if qtd_match else 0
+                    self._init_asset(key, desc)
+                    self.portfolio[key].update({'v23_dec': v_2023, 'v24_dec': v_2024_dec, 'q24_dec': qtd_2024_dec})
 
     def process_all_files(self):
         neg_df = pd.DataFrame()
         if self.neg_path and os.path.exists(self.neg_path):
-            neg_df = pd.read_excel(self.neg_path)
-            neg_df.columns = [c.strip() for c in neg_df.columns]
+            neg_df = pd.read_excel(self.neg_path); neg_df.columns = [c.strip() for c in neg_df.columns]
             for col in ['Quantidade', 'Valor']: neg_df[col] = neg_df[col].apply(self._clean_value)
             neg_df['Data'] = pd.to_datetime(neg_df['Data do Negócio'], dayfirst=True)
 
@@ -94,11 +89,19 @@ class IRPFManager:
                 df = pd.read_excel(p); df.columns = [c.strip() for c in df.columns]
                 for col in ['Quantidade', 'Valor da Operação']: df[col] = df[col].apply(self._clean_value)
                 df['Data'] = pd.to_datetime(df['Data'], dayfirst=True); mov_dfs.append(df)
-        
         all_movs = pd.concat(mov_dfs) if mov_dfs else pd.DataFrame()
 
+        # Identificar tickers em todos os arquivos
+        all_tickers = set(self.portfolio.keys())
+        if not neg_df.empty: all_tickers.update(neg_df['Código de Negociação'].dropna().unique())
+        if not all_movs.empty:
+            for p in all_movs['Produto'].dropna().unique():
+                t = self._extract_ticker(p)
+                if t: all_tickers.add(t)
+        
+        for t in all_tickers: self._init_asset(t)
+
         for ticker, data in self.portfolio.items():
-            if 'OUTRO_' in ticker: continue
             net_q24, net_c24 = 0, 0
             if not neg_df.empty:
                 t_neg = neg_df[(neg_df['Código de Negociação'] == ticker) & (neg_df['Data'].dt.year == 2024)]
@@ -114,7 +117,7 @@ class IRPFManager:
             data['c_start'] = data['v23_dec']
 
         for ticker, data in self.portfolio.items():
-            curr_q, curr_c = data.get('q_start', 0), data.get('c_start', 0)
+            curr_q, curr_c = data['q_start'], data['c_start']
             combined = []
             if not neg_df.empty:
                 for _, r in neg_df[neg_df['Código de Negociação'] == ticker].iterrows():
@@ -124,8 +127,8 @@ class IRPFManager:
                     t = str(r['Movimentação']).upper()
                     if any(x in t for x in ['BONIFICAÇÃO', 'AMORTIZAÇÃO', 'DIVIDENDO', 'RENDIMENTO', 'JUROS SOBRE CAPITAL']):
                         combined.append({'data': r['Data'], 'tipo': t, 'q': r['Quantidade'], 'v': r['Valor da Operação']})
+            
             combined = sorted(combined, key=lambda x: x['data'])
-
             for m in combined:
                 if 'COMPRA' in m['tipo']: curr_q += m['q']; curr_c += m['v']
                 elif 'BONIFICAÇÃO' in m['tipo']: curr_q += m['q']
@@ -134,8 +137,8 @@ class IRPFManager:
                     pm = curr_c / curr_q; curr_q -= m['q']; curr_c -= (m['q'] * pm)
                 if m['data'].year == 2024: data['q24_final'], data['v24_final'] = curr_q, curr_c
                 if m['data'].year == 2025:
-                    if 'JUROS SOBRE CAPITAL' in m['tipo']: data['jcp'] += m['v']
-                    elif any(x in m['tipo'] for x in ['DIVIDENDO', 'RENDIMENTO']): data['dividendos'] += m['v']
+                    if 'JUROS SOBRE CAPITAL' in m['tipo']: data['jcp_25'] += m['v']
+                    elif any(x in m['tipo'] for x in ['DIVIDENDO', 'RENDIMENTO']): data['div_25'] += m['v']
             data['q25_final'], data['v25_final'] = curr_q, curr_c
 
     def export_json(self):
@@ -145,11 +148,8 @@ class IRPFManager:
             q25, v25 = d.get('q25_final', v24), d.get('v25_final', v24)
             if v24 > 0.01 or v25 > 0.01:
                 data["ativos"].append({"ticker": t, "nome": d['nome'], "q24": q24, "v24": round(v24, 2), "q25": q25, "v25": round(v25, 2)})
-            if d['dividendos'] > 0 or d['jcp'] > 0:
-                data["proventos"].append({
-                    "ticker": t, "dividendos": round(d['dividendos'], 2), "jcp": round(d['jcp'], 2),
-                    "cnpj": self.cnpj_map.get(t, "CNPJ NÃO ENCONTRADO")
-                })
+            if d['div_25'] > 0 or d['jcp_25'] > 0:
+                data["proventos"].append({"ticker": t, "dividendos": round(d['div_25'], 2), "jcp": round(d['jcp_25'], 2), "cnpj": self.cnpj_map.get(t, "CNPJ NÃO ENCONTRADO")})
         with open(os.path.join(self.dash_dir, "data.json"), "w", encoding="utf-8") as f:
             json.dump(data, f, indent=4, ensure_ascii=False)
 
@@ -157,7 +157,7 @@ class IRPFManager:
         os.chdir(self.dash_dir)
         socketserver.TCPServer.allow_reuse_address = True
         with socketserver.TCPServer(("", 8000), http.server.SimpleHTTPRequestHandler) as httpd:
-            webbrowser.open("http://localhost:8000"); httpd.serve_forever()
+            print(f"\n🚀 Servidor Rodando: http://localhost:8000"); webbrowser.open("http://localhost:8000"); httpd.serve_forever()
 
 if __name__ == "__main__":
     import sys
