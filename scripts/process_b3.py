@@ -16,10 +16,43 @@ class IRPFManager:
         self.user_cpf = "39229903809"
         self.user_nome = "PATRICK CRISTIAN BARCELOS"
         self.dash_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "dashboard")
+        
+        # Base de CNPJs (Mapping Ticker -> CNPJ)
+        self.cnpj_map = {
+            'PETR4': '33.000.167/0001-01', 'PETR3': '33.000.167/0001-01',
+            'VALE3': '33.592.510/0001-54',
+            'BBDC4': '60.746.948/0001-12', 'BBDC3': '60.746.948/0001-12',
+            'ITUB4': '60.872.504/0001-23', 'ITUB3': '60.872.504/0001-23',
+            'KLBN4': '89.637.490/0001-45', 'KLBN11': '89.637.490/0001-45',
+            'TAEE11': '07.859.971/0001-30',
+            'BBSE3': '17.344.597/0001-94',
+            'CMIG4': '17.155.730/0001-64', 'CMIG3': '17.155.730/0001-64',
+            'SAPR4': '76.484.013/0001-45', 'SAPR3': '76.484.013/0001-45',
+            'EZTC3': '08.312.229/0001-73',
+            'WEGE3': '84.429.695/0001-11',
+            'XPLG11': '26.502.794/0001-85',
+            'HGPO11': '11.260.134/0001-68',
+            'KNCR11': '16.706.958/0001-32',
+            'VISC11': '17.554.274/0001-25',
+            'MXRF11': '97.521.225/0001-25',
+            'CPTS11': '18.979.895/0001-13',
+            'AURE3': '28.594.234/0001-23',
+            'CXSE3': '22.543.331/0001-00',
+            'TASA3': '92.781.335/0001-02',
+            'BHIA3': '33.041.260/0652-90',
+            'MGLU3': '47.960.950/0001-21',
+            'TOTS3': '53.113.791/0001-22',
+            'ITSA4': '61.532.644/0001-15',
+            'IRDM11': '28.830.325/0001-10',
+            'ALZR11': '28.737.771/0001-85',
+            'TRXF11': '28.548.288/0001-52',
+            'XPML11': '28.757.546/0001-00',
+            'BTHF11': '45.188.176/0001-57'
+        }
 
     def _clean_value(self, val):
         if isinstance(val, str):
-            val = val.replace('R$', '').replace('.', '').replace(',', '.').strip()
+            val = val.replace('R$', '').replace('.', '').replace(',', '.').replace('-', '0').strip()
             try: return float(val)
             except: return 0.0
         return float(val) if pd.notnull(val) else 0.0
@@ -30,7 +63,6 @@ class IRPFManager:
 
     def parse_dec_file(self):
         if not self.dec_path or not os.path.exists(self.dec_path): return
-        print(f"--- LENDO DECLARAÇÃO (.DEC) ---")
         with open(self.dec_path, 'r', encoding='latin-1') as f:
             for line in f:
                 if line.startswith('16'): self.user_nome = line[13:73].strip()
@@ -48,63 +80,76 @@ class IRPFManager:
                     else:
                         self.portfolio[key]['qtd'] += qtd_ini; self.portfolio[key]['custo'] += v_2023; self.portfolio[key]['v24_dec'] += v_2024_dec
 
-    def process_negotiations(self):
-        if not self.neg_path or not os.path.exists(self.neg_path): return
-        df = pd.read_excel(self.neg_path)
-        df.columns = [c.strip() for c in df.columns]
-        for col in ['Quantidade', 'Preço', 'Valor']:
-            if col in df.columns: df[col] = df[col].apply(self._clean_value)
-        df['Data do Negócio'] = pd.to_datetime(df['Data do Negócio'], dayfirst=True)
-        df = df.sort_values('Data do Negócio')
-        for _, row in df.iterrows():
-            ticker = row['Código de Negociação']
-            if ticker not in self.portfolio:
-                self.portfolio[ticker] = {'qtd':0, 'custo':0, 'nome':ticker, 'v24_dec':0, 'v24':0, 'q24':0, 'v25':0, 'q25':0, 'dividendos': 0, 'jcp': 0}
-            asset = self.portfolio[ticker]
-            tipo = str(row['Tipo de Movimentação']).upper()
-            if 'COMPRA' in tipo:
-                asset['qtd'] += row['Quantidade']; asset['custo'] += row['Valor']
-            elif 'VENDA' in tipo and asset['qtd'] > 0:
-                pm = asset['custo'] / asset['qtd']
-                asset['qtd'] -= row['Quantidade']; asset['custo'] -= (row['Quantidade'] * pm)
-            if row['Data do Negócio'].year == 2024: asset['q24'], asset['v24'] = asset['qtd'], asset['custo']
-            elif row['Data do Negócio'].year == 2025: asset['q25'], asset['v25'] = asset['qtd'], asset['custo']
+    def process_all_files(self):
+        neg_df = pd.DataFrame()
+        if self.neg_path and os.path.exists(self.neg_path):
+            neg_df = pd.read_excel(self.neg_path)
+            neg_df.columns = [c.strip() for c in neg_df.columns]
+            for col in ['Quantidade', 'Valor']: neg_df[col] = neg_df[col].apply(self._clean_value)
+            neg_df['Data'] = pd.to_datetime(neg_df['Data do Negócio'], dayfirst=True)
 
-    def process_dividends(self):
-        paths = [self.excel_2024, self.excel_2025]
-        for path in paths:
-            if not path or not os.path.exists(path): continue
-            df = pd.read_excel(path)
-            df.columns = [c.strip() for c in df.columns]
-            for _, row in df.iterrows():
-                tipo = str(row['Movimentação']).upper()
-                ticker = self._extract_ticker(row['Produto'])
-                if ticker and ticker in self.portfolio:
-                    val = self._clean_value(row['Valor da Operação'])
-                    if pd.to_datetime(row['Data'], dayfirst=True).year == 2025:
-                        if 'JUROS SOBRE CAPITAL' in tipo: self.portfolio[ticker]['jcp'] += val
-                        elif 'DIVIDENDO' in tipo or 'RENDIMENTO' in tipo: self.portfolio[ticker]['dividendos'] += val
+        mov_dfs = []
+        for p in [self.excel_2024, self.excel_2025]:
+            if p and os.path.exists(p):
+                df = pd.read_excel(p); df.columns = [c.strip() for c in df.columns]
+                for col in ['Quantidade', 'Valor da Operação']: df[col] = df[col].apply(self._clean_value)
+                df['Data'] = pd.to_datetime(df['Data'], dayfirst=True); mov_dfs.append(df)
+        
+        all_movs = pd.concat(mov_dfs) if mov_dfs else pd.DataFrame()
+
+        for ticker, data in self.portfolio.items():
+            if 'OUTRO_' in ticker: continue
+            net_q24, net_c24 = 0, 0
+            if not neg_df.empty:
+                t_neg = neg_df[(neg_df['Código de Negociação'] == ticker) & (neg_df['Data'].dt.year == 2024)]
+                for _, row in t_neg.iterrows():
+                    if 'COMPRA' in str(row['Tipo de Movimentação']).upper(): net_q24 += row['Quantidade']; net_c24 += row['Valor']
+                    else: net_q24 -= row['Quantidade']
+            if not all_movs.empty:
+                t_mov = all_movs[(all_movs['Produto'].str.contains(ticker, na=False)) & (all_movs['Data'].dt.year == 2024)]
+                for _, row in t_mov.iterrows():
+                    if 'BONIFICAÇÃO' in str(row['Movimentação']).upper(): net_q24 += row['Quantidade']
+                    elif 'AMORTIZAÇÃO' in str(row['Movimentação']).upper(): net_c24 -= row['Valor da Operação']
+            data['q_start'] = data['q24_dec'] - net_q24
+            data['c_start'] = data['v23_dec']
+
+        for ticker, data in self.portfolio.items():
+            curr_q, curr_c = data.get('q_start', 0), data.get('c_start', 0)
+            combined = []
+            if not neg_df.empty:
+                for _, r in neg_df[neg_df['Código de Negociação'] == ticker].iterrows():
+                    combined.append({'data': r['Data'], 'tipo': str(r['Tipo de Movimentação']).upper(), 'q': r['Quantidade'], 'v': r['Valor']})
+            if not all_movs.empty:
+                for _, r in all_movs[all_movs['Produto'].str.contains(ticker, na=False)].iterrows():
+                    t = str(r['Movimentação']).upper()
+                    if any(x in t for x in ['BONIFICAÇÃO', 'AMORTIZAÇÃO', 'DIVIDENDO', 'RENDIMENTO', 'JUROS SOBRE CAPITAL']):
+                        combined.append({'data': r['Data'], 'tipo': t, 'q': r['Quantidade'], 'v': r['Valor da Operação']})
+            combined = sorted(combined, key=lambda x: x['data'])
+
+            for m in combined:
+                if 'COMPRA' in m['tipo']: curr_q += m['q']; curr_c += m['v']
+                elif 'BONIFICAÇÃO' in m['tipo']: curr_q += m['q']
+                elif 'AMORTIZAÇÃO' in m['tipo']: curr_c -= m['v']
+                elif 'VENDA' in m['tipo'] and curr_q > 0:
+                    pm = curr_c / curr_q; curr_q -= m['q']; curr_c -= (m['q'] * pm)
+                if m['data'].year == 2024: data['q24_final'], data['v24_final'] = curr_q, curr_c
+                if m['data'].year == 2025:
+                    if 'JUROS SOBRE CAPITAL' in m['tipo']: data['jcp'] += m['v']
+                    elif any(x in m['tipo'] for x in ['DIVIDENDO', 'RENDIMENTO']): data['dividendos'] += m['v']
+            data['q25_final'], data['v25_final'] = curr_q, curr_c
 
     def export_json(self):
         data = {"usuario": {"nome": self.user_nome, "cpf": self.user_cpf}, "ativos": [], "proventos": []}
         for t, d in self.portfolio.items():
-            v24 = d['v24'] if d['v24'] > 0 or d['q24'] > 0 else d['v24_dec']
-            q24 = d['q24'] if d['v24'] > 0 or d['q24'] > 0 else 0
-            v25 = d['v25'] if d['v25'] > 0 or d['q25'] > 0 else v24
-            q25 = d['q25'] if d['v25'] > 0 or d['q25'] > 0 else q24
-            
-            # Preço Médio Unitário 2025
-            pm25 = (v25 / q25) if q25 > 0 else 0
-
+            q24, v24 = d.get('q24_final', d['q24_dec']), d.get('v24_final', d['v24_dec'])
+            q25, v25 = d.get('q25_final', v24), d.get('v25_final', v24)
             if v24 > 0.01 or v25 > 0.01:
-                data["ativos"].append({
-                    "ticker": t, "nome": d['nome'], 
-                    "q24": q24, "v24": round(v24, 2), 
-                    "q25": q25, "v25": round(v25, 2),
-                    "pm25": round(pm25, 4)
-                })
+                data["ativos"].append({"ticker": t, "nome": d['nome'], "q24": q24, "v24": round(v24, 2), "q25": q25, "v25": round(v25, 2)})
             if d['dividendos'] > 0 or d['jcp'] > 0:
-                data["proventos"].append({"ticker": t, "dividendos": round(d['dividendos'], 2), "jcp": round(d['jcp'], 2)})
+                data["proventos"].append({
+                    "ticker": t, "dividendos": round(d['dividendos'], 2), "jcp": round(d['jcp'], 2),
+                    "cnpj": self.cnpj_map.get(t, "CNPJ NÃO ENCONTRADO")
+                })
         with open(os.path.join(self.dash_dir, "data.json"), "w", encoding="utf-8") as f:
             json.dump(data, f, indent=4, ensure_ascii=False)
 
@@ -118,4 +163,4 @@ if __name__ == "__main__":
     import sys
     e25, e24, dec, neg = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]
     manager = IRPFManager(e25, e24, dec, neg)
-    manager.parse_dec_file(); manager.process_negotiations(); manager.process_dividends(); manager.export_json(); manager.start_server()
+    manager.parse_dec_file(); manager.process_all_files(); manager.export_json(); manager.start_server()
