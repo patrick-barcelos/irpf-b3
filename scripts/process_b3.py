@@ -30,6 +30,7 @@ class IRPFManager:
 
     def parse_dec_file(self):
         if not self.dec_path or not os.path.exists(self.dec_path): return
+        print(f"--- LENDO DECLARAÇÃO (.DEC) ---")
         with open(self.dec_path, 'r', encoding='latin-1') as f:
             for line in f:
                 if line.startswith('16'): self.user_nome = line[13:73].strip()
@@ -88,11 +89,20 @@ class IRPFManager:
         data = {"usuario": {"nome": self.user_nome, "cpf": self.user_cpf}, "ativos": [], "proventos": []}
         for t, d in self.portfolio.items():
             v24 = d['v24'] if d['v24'] > 0 or d['q24'] > 0 else d['v24_dec']
-            q24 = d['q24'] if d['v24'] > 0 or d['q24'] > 0 else "Ref .DEC"
+            q24 = d['q24'] if d['v24'] > 0 or d['q24'] > 0 else 0
             v25 = d['v25'] if d['v25'] > 0 or d['q25'] > 0 else v24
             q25 = d['q25'] if d['v25'] > 0 or d['q25'] > 0 else q24
+            
+            # Preço Médio Unitário 2025
+            pm25 = (v25 / q25) if q25 > 0 else 0
+
             if v24 > 0.01 or v25 > 0.01:
-                data["ativos"].append({"ticker": t, "nome": d['nome'], "q24": str(q24), "v24": round(v24, 2), "q25": str(q25), "v25": round(v25, 2)})
+                data["ativos"].append({
+                    "ticker": t, "nome": d['nome'], 
+                    "q24": q24, "v24": round(v24, 2), 
+                    "q25": q25, "v25": round(v25, 2),
+                    "pm25": round(pm25, 4)
+                })
             if d['dividendos'] > 0 or d['jcp'] > 0:
                 data["proventos"].append({"ticker": t, "dividendos": round(d['dividendos'], 2), "jcp": round(d['jcp'], 2)})
         with open(os.path.join(self.dash_dir, "data.json"), "w", encoding="utf-8") as f:
