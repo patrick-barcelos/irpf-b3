@@ -4,25 +4,40 @@ Uma ferramenta automatizada para consolidar investimentos da B3, calcular Preço
 
 ## 🚀 Funcionalidades
 
-- **Processamento Multi-Arquivo:** Lê arquivos `.DEC` (Receita Federal), Extratos de Movimentação e Relatórios de Negociação da B3.
-- **Cálculo de Preço Médio Real:** Algoritmo cronológico que desconta vendas pelo custo médio, seguindo a norma da Receita.
-- **Dashboard Interativo:** Interface em React com busca, ordenação e divisão por fichas:
-    - **Bens e Direitos** (Patrimônio e Quantidades).
-    - **Rendimentos Isentos** (Dividendos e FIIs).
-    - **Tributação Exclusiva** (JCP).
-- **Servidor Local:** Abre automaticamente no seu navegador em `http://localhost:8000`.
+- **Cálculo de Preço Médio Real:** Algoritmo cronológico que desconta vendas pelo custo médio proporcional.
+- **Dashboard Interativo:** Interface em React com busca, ordenação e divisão por fichas da Receita Federal.
+- **Privacidade:** Seus dados financeiros não saem da sua máquina.
 
-## 📂 Como baixar os arquivos necessários
+---
 
-Para que a ferramenta funcione com precisão total, você deve baixar os seguintes arquivos:
+## 📂 Como obter os arquivos (Passo a Passo)
 
-1. **Área do Investidor B3 (Extratos > Movimentação):**
-   - Baixe o Excel do período **01/01/2024 a 31/12/2024**.
-   - Baixe o Excel do período **01/01/2025 a 31/12/2025**.
-2. **Área do Investidor B3 (Extratos > Negociação):**
-   - Baixe o Excel do período completo (**01/01/2024 a 31/12/2025**).
-3. **Programa IRPF 2025:**
-   - Localize o arquivo `.DEC` da sua última declaração entregue (base 2024).
+Para a precisão total dos cálculos, você precisará de **4 arquivos**. Siga as instruções abaixo para cada um:
+
+### 1. Extratos de Movimentação (B3)
+Este arquivo contém o histórico de entradas de Dividendos, JCP e Rendimentos.
+1. Acesse o portal [Área do Investidor B3](https://investidor.b3.com.br/).
+2. No menu superior, clique em **Extratos** > **Movimentação**.
+3. No campo de período, selecione: **01/01/2024** a **31/12/2024**.
+4. Clique no ícone de **Excel** (Download) no canto superior direito.
+5. **Repita o processo** selecionando o período: **01/01/2025** a **31/12/2025**.
+
+### 2. Extrato de Negociação (B3)
+Este arquivo é o mais importante para o cálculo do Preço Médio das compras e vendas.
+1. No portal [Área do Investidor B3](https://investidor.b3.com.br/), vá em **Extratos** > **Negociação**.
+2. Selecione o período completo: **01/01/2024** a **31/12/2025**.
+3. Clique no ícone de **Excel** (Download).
+
+### 3. Arquivo da Declaração Anterior (.DEC)
+Este arquivo contém os saldos que você já declarou e ativos fora da B3 (como seu carro ou contas bancárias).
+1. Abra o **Programa IRPF 2025** no seu computador.
+2. Na lista de declarações, identifique a que foi entregue.
+3. No seu computador (Windows ou Mac), navegue até a pasta onde o programa salva os dados.
+   - **No Mac:** Geralmente em `Documents/IRPF/2025/transmitidas`.
+   - **No Windows:** Geralmente em `C:\Arquivos de Programas RFB\IRPF2025\aplicacao\dados`.
+4. Procure o arquivo que começa com o seu CPF e termina com a extensão **.DEC** (Ex: `12345678900-IRPF-A-2025-2024-ORIGI.DEC`).
+
+---
 
 ## 🛠️ Como Utilizar
 
@@ -35,20 +50,21 @@ pip install pandas openpyxl
 ```
 
 ### 2. Execução
-Execute o script passando os caminhos dos arquivos na ordem correta:
+Rode o script passando os arquivos na seguinte ordem:
 ```bash
 python3 scripts/process_b3.py \
-  "movimentacao_2025.xlsx" \
-  "movimentacao_2024.xlsx" \
-  "sua_declaracao_2025.DEC" \
-  "negociacao_2024_2025.xlsx"
+  "caminho/movimentacao_2025.xlsx" \
+  "caminho/movimentacao_2024.xlsx" \
+  "caminho/sua_declaracao.DEC" \
+  "caminho/negociacao_2024_2025.xlsx"
 ```
 
 ### 3. Visualização
-O script abrirá automaticamente o navegador em `http://localhost:8000`. Use os dados da tabela para preencher as fichas do seu IRPF 2026.
-
-## 🛡️ Segurança e Privacidade
-Os dados são processados localmente na sua máquina. O servidor web roda apenas em `localhost` e nenhuma informação é enviada para servidores externos.
+O Dashboard abrirá automaticamente no seu navegador em `http://localhost:8000`. Use as tabelas para preencher as fichas:
+- **Bens e Direitos**
+- **Rendimentos Isentos**
+- **Rendimentos Sujeitos à Tributação Exclusiva**
 
 ---
-Desenvolvido para facilitar a vida do investidor. 📈
+## 🛡️ Segurança
+Os dados financeiros são processados localmente. O arquivo `.gitignore` já está configurado para não permitir que você suba acidentalmente seus dados (`.json`, `.xlsx`, `.DEC`) para o GitHub.
