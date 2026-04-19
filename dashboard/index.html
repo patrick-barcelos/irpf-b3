@@ -14,10 +14,11 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect } = React;
+        const { useState, useEffect, useMemo } = React;
 
         const App = () => {
             const [data, setData] = useState({ usuario: {}, ativos: [], proventos: [] });
+            const [searchTerm, setSearchTerm] = useState("");
             const [checkedItems, setCheckedItems] = useState(() => {
                 const saved = localStorage.getItem('irpf_checked_items');
                 return saved ? JSON.parse(saved) : {};
@@ -41,16 +42,43 @@
                 }));
             };
 
+            const filteredAtivos = useMemo(() => {
+                return data.ativos.filter(a => 
+                    a.ticker.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    a.nome.toLowerCase().includes(searchTerm.toLowerCase())
+                );
+            }, [data.ativos, searchTerm]);
+
+            const filteredProventos = useMemo(() => {
+                return data.proventos.filter(p => 
+                    p.ticker.toLowerCase().includes(searchTerm.toLowerCase())
+                );
+            }, [data.proventos, searchTerm]);
+
             return (
                 <div class="min-h-screen p-6 max-w-6xl mx-auto">
-                    <header class="mb-10 flex justify-between items-center bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                        <div>
-                            <h1 class="text-2xl font-black text-slate-800 tracking-tight">IRPF <span class="text-indigo-600">2026</span></h1>
-                            <p class="text-slate-400 text-sm">Organização por Fichas da Receita Federal</p>
+                    <header class="mb-8 flex flex-col md:flex-row justify-between items-center bg-white p-6 rounded-2xl shadow-sm border border-slate-100 gap-4">
+                        <div class="flex items-center gap-4 w-full md:w-auto">
+                            <div>
+                                <h1 class="text-2xl font-black text-slate-800 tracking-tight leading-none">IRPF <span class="text-indigo-600">2026</span></h1>
+                                <p class="text-slate-400 text-xs mt-1 uppercase font-bold tracking-widest">Dashboard de Investimentos</p>
+                            </div>
                         </div>
-                        <div class="text-right">
-                            <p class="font-bold text-slate-700">{data.usuario.nome}</p>
-                            <p class="text-xs text-slate-400">CPF: {data.usuario.cpf}</p>
+
+                        <div class="relative w-full md:w-96">
+                            <i class="fa fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                            <input 
+                                type="text" 
+                                placeholder="Buscar ticker ou nome nas 3 fichas..." 
+                                class="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all text-sm font-medium"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                        </div>
+
+                        <div class="text-right hidden md:block">
+                            <p class="font-bold text-slate-700 text-sm">{data.usuario.nome}</p>
+                            <p class="text-[10px] text-slate-400 uppercase font-black tracking-tighter">CPF: {data.usuario.cpf}</p>
                         </div>
                     </header>
 
@@ -66,7 +94,7 @@
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-100">
-                                {data.ativos.map(a => (
+                                {filteredAtivos.map(a => (
                                     <tr key={a.ticker} class={`transition-colors ${checkedItems[a.ticker] ? 'bg-emerald-50/50' : 'hover:bg-indigo-50/20'}`}>
                                         <td class="p-4">
                                             <span class={`font-bold ${checkedItems[a.ticker] ? 'text-slate-400 line-through' : 'text-indigo-700'}`}>{a.ticker}</span>
@@ -86,10 +114,11 @@
                                 ))}
                             </tbody>
                         </table>
+                        {filteredAtivos.length === 0 && <EmptyState />}
                     </Section>
 
                     {/* PROVENTOS */}
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
                         {/* RENDIMENTOS ISENTOS */}
                         <Section title="Rendimentos Isentos (Div/FII)" icon="fa-hand-holding-heart" color="bg-emerald-500">
                             <table class="w-full text-sm text-left">
@@ -97,7 +126,7 @@
                                     <tr><th class="p-4">Ativo</th><th class="p-4 text-right">Valor</th><th class="p-4 text-center w-16">Ok</th></tr>
                                 </thead>
                                 <tbody class="divide-y divide-slate-100">
-                                    {data.proventos.filter(p => p.dividendos > 0).map(p => (
+                                    {filteredProventos.filter(p => p.dividendos > 0).map(p => (
                                         <tr key={`div-${p.ticker}`} class={checkedItems[`div-${p.ticker}`] ? 'bg-emerald-50/30 text-slate-400' : ''}>
                                             <td class="p-4 font-bold">{p.ticker}</td>
                                             <td class="p-4 text-right text-emerald-600 font-bold">R$ {p.dividendos.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
@@ -108,6 +137,7 @@
                                     ))}
                                 </tbody>
                             </table>
+                            {filteredProventos.filter(p => p.dividendos > 0).length === 0 && <EmptyState mini />}
                         </Section>
 
                         {/* TRIBUTAÇÃO EXCLUSIVA */}
@@ -117,7 +147,7 @@
                                     <tr><th class="p-4">Ativo</th><th class="p-4 text-right">Valor</th><th class="p-4 text-center w-16">Ok</th></tr>
                                 </thead>
                                 <tbody class="divide-y divide-slate-100">
-                                    {data.proventos.filter(p => p.jcp > 0).map(p => (
+                                    {filteredProventos.filter(p => p.jcp > 0).map(p => (
                                         <tr key={`jcp-${p.ticker}`} class={checkedItems[`jcp-${p.ticker}`] ? 'bg-orange-50/30 text-slate-400' : ''}>
                                             <td class="p-4 font-bold">{p.ticker}</td>
                                             <td class="p-4 text-right text-orange-600 font-bold">R$ {p.jcp.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
@@ -128,6 +158,7 @@
                                     ))}
                                 </tbody>
                             </table>
+                            {filteredProventos.filter(p => p.jcp > 0).length === 0 && <EmptyState mini />}
                         </Section>
                     </div>
                 </div>
@@ -138,9 +169,16 @@
             <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden mb-6">
                 <div class="p-4 flex items-center gap-3 border-b border-slate-50">
                     <div class={`${color} p-2 rounded-lg text-white w-10 h-10 flex items-center justify-center`}><i class={`fa ${icon}`}></i></div>
-                    <h2 class="font-black text-slate-700 tracking-tight">{title}</h2>
+                    <h2 class="font-black text-slate-700 tracking-tight uppercase text-xs">{title}</h2>
                 </div>
                 <div class="overflow-x-auto">{children}</div>
+            </div>
+        );
+
+        const EmptyState = ({ mini }) => (
+            <div class={`${mini ? 'p-8' : 'p-20'} text-center text-slate-300`}>
+                <i class={`fa fa-search ${mini ? 'text-xl' : 'text-4xl'} mb-3`}></i>
+                <p class="text-xs font-bold uppercase tracking-widest">Nada encontrado</p>
             </div>
         );
 
