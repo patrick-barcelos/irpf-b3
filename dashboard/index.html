@@ -14,10 +14,14 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect, useMemo } = React;
+        const { useState, useEffect } = React;
 
         const App = () => {
             const [data, setData] = useState({ usuario: {}, ativos: [], proventos: [] });
+            const [checkedItems, setCheckedItems] = useState(() => {
+                const saved = localStorage.getItem('irpf_checked_items');
+                return saved ? JSON.parse(saved) : {};
+            });
             
             useEffect(() => {
                 fetch('data.json')
@@ -25,6 +29,17 @@
                     .then(json => setData(json))
                     .catch(err => console.error(err));
             }, []);
+
+            useEffect(() => {
+                localStorage.setItem('irpf_checked_items', JSON.stringify(checkedItems));
+            }, [checkedItems]);
+
+            const toggleCheck = (id) => {
+                setCheckedItems(prev => ({
+                    ...prev,
+                    [id]: !prev[id]
+                }));
+            };
 
             return (
                 <div class="min-h-screen p-6 max-w-6xl mx-auto">
@@ -45,49 +60,71 @@
                             <thead class="bg-slate-50 text-slate-500 uppercase text-[10px] font-bold">
                                 <tr>
                                     <th class="p-4">Ativo</th>
-                                    <th class="p-4">Qtd 2024</th>
                                     <th class="p-4 text-right">Saldo 2024</th>
-                                    <th class="p-4">Qtd 2025</th>
                                     <th class="p-4 text-right">Saldo 2025</th>
+                                    <th class="p-4 text-center w-20">Feito?</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-100">
                                 {data.ativos.map(a => (
-                                    <tr key={a.ticker} class="hover:bg-indigo-50/20">
-                                        <td class="p-4"><span class="font-bold text-indigo-700">{a.ticker}</span><br/><small class="text-slate-400">{a.nome.slice(0,40)}</small></td>
-                                        <td class="p-4 text-slate-500">{a.q24}</td>
-                                        <td class="p-4 text-right font-medium text-slate-600">R$ {a.v24.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
-                                        <td class="p-4 font-bold text-slate-700">{a.q25}</td>
+                                    <tr key={a.ticker} class={`transition-colors ${checkedItems[a.ticker] ? 'bg-emerald-50/50' : 'hover:bg-indigo-50/20'}`}>
+                                        <td class="p-4">
+                                            <span class={`font-bold ${checkedItems[a.ticker] ? 'text-slate-400 line-through' : 'text-indigo-700'}`}>{a.ticker}</span>
+                                            <br/><small class="text-slate-400">{a.nome.slice(0,50)}</small>
+                                        </td>
+                                        <td class="p-4 text-right font-medium text-slate-500">R$ {a.v24.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
                                         <td class="p-4 text-right font-black text-slate-800 text-base">R$ {a.v25.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                                        <td class="p-4 text-center">
+                                            <input 
+                                                type="checkbox" 
+                                                class="w-5 h-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                                                checked={!!checkedItems[a.ticker]}
+                                                onChange={() => toggleCheck(a.ticker)}
+                                            />
+                                        </td>
                                     </tr>
                                 ))}
                             </tbody>
                         </table>
                     </Section>
 
-                    {/* SEÇÃO 2: RENDIMENTOS ISENTOS */}
+                    {/* PROVENTOS */}
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-                        <Section title="Ficha: Rendimentos Isentos (Dividendos/FIIs)" icon="fa-hand-holding-heart" color="bg-emerald-500">
+                        {/* RENDIMENTOS ISENTOS */}
+                        <Section title="Rendimentos Isentos (Div/FII)" icon="fa-hand-holding-heart" color="bg-emerald-500">
                             <table class="w-full text-sm text-left">
                                 <thead class="bg-slate-50 text-slate-500 text-[10px] font-bold uppercase">
-                                    <tr><th class="p-4">Ativo</th><th class="p-4 text-right">Valor Recebido</th></tr>
+                                    <tr><th class="p-4">Ativo</th><th class="p-4 text-right">Valor</th><th class="p-4 text-center w-16">Ok</th></tr>
                                 </thead>
                                 <tbody class="divide-y divide-slate-100">
                                     {data.proventos.filter(p => p.dividendos > 0).map(p => (
-                                        <tr key={p.ticker}><td class="p-4 font-bold text-slate-700">{p.ticker}</td><td class="p-4 text-right text-emerald-600 font-bold">R$ {p.dividendos.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td></tr>
+                                        <tr key={`div-${p.ticker}`} class={checkedItems[`div-${p.ticker}`] ? 'bg-emerald-50/30 text-slate-400' : ''}>
+                                            <td class="p-4 font-bold">{p.ticker}</td>
+                                            <td class="p-4 text-right text-emerald-600 font-bold">R$ {p.dividendos.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                                            <td class="p-4 text-center">
+                                                <input type="checkbox" checked={!!checkedItems[`div-${p.ticker}`]} onChange={() => toggleCheck(`div-${p.ticker}`)} />
+                                            </td>
+                                        </tr>
                                     ))}
                                 </tbody>
                             </table>
                         </Section>
 
-                        <Section title="Ficha: Tributação Exclusiva (JCP)" icon="fa-percent" color="bg-orange-500">
+                        {/* TRIBUTAÇÃO EXCLUSIVA */}
+                        <Section title="Tributação Exclusiva (JCP)" icon="fa-percent" color="bg-orange-500">
                             <table class="w-full text-sm text-left">
                                 <thead class="bg-slate-50 text-slate-500 text-[10px] font-bold uppercase">
-                                    <tr><th class="p-4">Ativo</th><th class="p-4 text-right">Valor Líquido</th></tr>
+                                    <tr><th class="p-4">Ativo</th><th class="p-4 text-right">Valor</th><th class="p-4 text-center w-16">Ok</th></tr>
                                 </thead>
                                 <tbody class="divide-y divide-slate-100">
                                     {data.proventos.filter(p => p.jcp > 0).map(p => (
-                                        <tr key={p.ticker}><td class="p-4 font-bold text-slate-700">{p.ticker}</td><td class="p-4 text-right text-orange-600 font-bold">R$ {p.jcp.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td></tr>
+                                        <tr key={`jcp-${p.ticker}`} class={checkedItems[`jcp-${p.ticker}`] ? 'bg-orange-50/30 text-slate-400' : ''}>
+                                            <td class="p-4 font-bold">{p.ticker}</td>
+                                            <td class="p-4 text-right text-orange-600 font-bold">R$ {p.jcp.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                                            <td class="p-4 text-center">
+                                                <input type="checkbox" checked={!!checkedItems[`jcp-${p.ticker}`]} onChange={() => toggleCheck(`jcp-${p.ticker}`)} />
+                                            </td>
+                                        </tr>
                                     ))}
                                 </tbody>
                             </table>
