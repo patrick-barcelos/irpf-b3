@@ -1,0 +1,534 @@
+{
+    "usuario": {
+        "nome": "PATRICK CRISTIAN BARCELOS",
+        "cpf": "39229903809"
+    },
+    "ativos": [
+        {
+            "ticker": "BBDC3",
+            "nome": "05497 ACOES DE BBDC3 AO PRECO MEDIO DE R$ 11,63",
+            "q24": "5897.0",
+            "v24": 4692.0,
+            "q25": "5897.0",
+            "v25": 4692.0
+        },
+        {
+            "ticker": "CMIG4",
+            "nome": "05572 ACOES DE CMIG4 AO PRECO MEDIO DE R$ 10,69",
+            "q24": "5872.0",
+            "v24": 3417.0,
+            "q25": "5872.0",
+            "v25": 3417.0
+        },
+        {
+            "ticker": "BBAS3",
+            "nome": "05133 ACOES DE BBAS3 AO PRECO MEDIO DE R$ 26,38",
+            "q24": "5233.0",
+            "v24": 2635.0,
+            "q25": "5333.0",
+            "v25": 4515.0
+        },
+        {
+            "ticker": "HGLG11",
+            "nome": "050 UNIDADES DE HGLG11 AO PRECO MEDIO DE R$ 0,00",
+            "q24": "652.0",
+            "v24": 2849.56,
+            "q25": "654.0",
+            "v25": 3161.56
+        },
+        {
+            "ticker": "KNCR11",
+            "nome": "050 UNIDADES DE KNCR11 AO PRECO MEDIO DE R$ 0,00",
+            "q24": "5374.0",
+            "v24": 13425.19,
+            "q25": "5391.0",
+            "v25": 15170.98
+        },
+        {
+            "ticker": "BCFF11",
+            "nome": "050 UNIDADES DE BCFF11 AO PRECO MEDIO DE R$ 0,00",
+            "q24": "147.0",
+            "v24": 420.91,
+            "q25": "147.0",
+            "v25": 420.91
+        },
+        {
+            "ticker": "RBRR11",
+            "nome": "050 UNIDADES DE RBRR11 AO PRECO MEDIO DE R$ 0,00",
+            "q24": "700.0",
+            "v24": 1983.97,
+            "q25": "726.0",
+            "v25": 4233.86
+        },
+        {
+            "ticker": "TVRI11",
+            "nome": "050 UNIDADES DE TVRI11 AO PRECO MEDIO DE R$ 0,00",
+            "q24": "Ref .DEC",
+            "v24": 0.0,
+            "q25": "638.0",
+            "v25": 90.5
+        },
+        {
+            "ticker": "XPLG11",
+            "nome": "050 UNIDADES DE XPLG11 AO PRECO MEDIO DE R$ 0,00",
+            "q24": "5359.0",
+            "v24": 6392.97,
+            "q25": "5371.0",
+            "v25": 7527.32
+        },
+        {
+            "ticker": "BTHF11",
+            "nome": "051146 COTAS DE BTHF11 AO PRECO MEDIO DE R$ 10,25",
+            "q24": "Ref .DEC",
+            "v24": 0.0,
+            "q25": "51215.0",
+            "v25": 590.94
+        },
+        {
+            "ticker": "VISC11",
+            "nome": "0535 COTAS DE VISC11 AO PRECO MEDIO DE R$ 98,06",
+            "q24": "570.0",
+            "v24": 3431.05,
+            "q25": "605.0",
+            "v25": 7035.52
+        },
+        {
+            "ticker": "IRDM11",
+            "nome": "0551 COTAS DE IRDM11 AO PRECO MEDIO DE R$ 71,70",
+            "q24": "602.0",
+            "v24": 3655.49,
+            "q25": "602.0",
+            "v25": 3655.49
+        },
+        {
+            "ticker": "MXRF11",
+            "nome": "05186 COTAS DE MXRF11 AO PRECO MEDIO DE R$ 10,36",
+            "q24": "5372.0",
+            "v24": 1925.9,
+            "q25": "5582.0",
+            "v25": 3902.09
+        },
+        {
+            "ticker": "CPTS11",
+            "nome": "05560 COTAS DE CPTS11 AO PRECO MEDIO DE R$ 8,38",
+            "q24": "5706.0",
+            "v24": 1238.75,
+            "q25": "5991.0",
+            "v25": 3324.95
+        },
+        {
+            "ticker": "ALZR11",
+            "nome": "0541 COTAS DE ALZR11 AO PRECO MEDIO DE R$ 116,00",
+            "q24": "Ref .DEC",
+            "v24": 0.0,
+            "q25": "560.0",
+            "v25": 197.36
+        },
+        {
+            "ticker": "TRXF11",
+            "nome": "0539 COTAS DE TRXF11 AO PRECO MEDIO DE R$ 108,93",
+            "q24": "548.0",
+            "v24": 1022.46,
+            "q25": "548.0",
+            "v25": 1022.46
+        },
+        {
+            "ticker": "XPML11",
+            "nome": "0543 COTAS DE XPML11 AO PRECO MEDIO DE R$ 111,49",
+            "q24": "Ref .DEC",
+            "v24": 0.0,
+            "q25": "546.0",
+            "v25": 305.21
+        },
+        {
+            "ticker": "HGPO11",
+            "nome": "0551 COTAS DE HGPO11 AO PRECO MEDIO DE R$ 171,66",
+            "q24": "584.0",
+            "v24": 4951.67,
+            "q25": "584.0",
+            "v25": 4951.67
+        },
+        {
+            "ticker": "SAPR3F",
+            "nome": "SAPR3F",
+            "q24": "103.0",
+            "v24": 531.05,
+            "q25": "106.0",
+            "v25": 553.97
+        },
+        {
+            "ticker": "CXSE3F",
+            "nome": "CXSE3F",
+            "q24": "114.0",
+            "v24": 1573.73,
+            "q25": "115.0",
+            "v25": 1588.92
+        },
+        {
+            "ticker": "KLBN4F",
+            "nome": "KLBN4F",
+            "q24": "123.0",
+            "v24": 532.22,
+            "q25": "135.0",
+            "v25": 582.74
+        },
+        {
+            "ticker": "ITUB3F",
+            "nome": "ITUB3F",
+            "q24": "Ref .DEC",
+            "v24": 0,
+            "q25": "1.0",
+            "v25": 30.39
+        },
+        {
+            "ticker": "BBAS3F",
+            "nome": "BBAS3F",
+            "q24": "33.0",
+            "v24": 872.69,
+            "q25": "108.0",
+            "v25": 2307.62
+        },
+        {
+            "ticker": "BBDC4F",
+            "nome": "BBDC4F",
+            "q24": "127.0",
+            "v24": 1777.54,
+            "q25": "148.0",
+            "v25": 2043.09
+        },
+        {
+            "ticker": "TRPL4F",
+            "nome": "TRPL4F",
+            "q24": "40.0",
+            "v24": 994.21,
+            "q25": "40.0",
+            "v25": 994.21
+        },
+        {
+            "ticker": "ABEV3F",
+            "nome": "ABEV3F",
+            "q24": "2.0",
+            "v24": 27.02,
+            "q25": "2.0",
+            "v25": 27.02
+        },
+        {
+            "ticker": "BBSE3F",
+            "nome": "BBSE3F",
+            "q24": "2.0",
+            "v24": 67.04,
+            "q25": "2.0",
+            "v25": 67.04
+        },
+        {
+            "ticker": "AESB3F",
+            "nome": "AESB3F",
+            "q24": "77.0",
+            "v24": 807.78,
+            "q25": "77.0",
+            "v25": 807.78
+        },
+        {
+            "ticker": "WEGE3F",
+            "nome": "WEGE3F",
+            "q24": "20.0",
+            "v24": 793.02,
+            "q25": "42.0",
+            "v25": 1626.47
+        },
+        {
+            "ticker": "TAEE11F",
+            "nome": "TAEE11F",
+            "q24": "4.0",
+            "v24": 140.72,
+            "q25": "34.0",
+            "v25": 1152.92
+        },
+        {
+            "ticker": "BBDC3F",
+            "nome": "BBDC3F",
+            "q24": "97.0",
+            "v24": 1087.69,
+            "q25": "97.0",
+            "v25": 1087.69
+        },
+        {
+            "ticker": "TRPL4",
+            "nome": "TRPL4",
+            "q24": "100.0",
+            "v24": 2478.0,
+            "q25": "100.0",
+            "v25": 2478.0
+        },
+        {
+            "ticker": "CMIG4F",
+            "nome": "CMIG4F",
+            "q24": "12.0",
+            "v24": 136.8,
+            "q25": "12.0",
+            "v25": 136.8
+        },
+        {
+            "ticker": "PETZ3F",
+            "nome": "PETZ3F",
+            "q24": "45.0",
+            "v24": 225.9,
+            "q25": "45.0",
+            "v25": 225.9
+        },
+        {
+            "ticker": "TASA3F",
+            "nome": "TASA3F",
+            "q24": "9.0",
+            "v24": 87.57,
+            "q25": "37.0",
+            "v25": 319.27
+        },
+        {
+            "ticker": "LVBI11",
+            "nome": "LVBI11",
+            "q24": "Ref .DEC",
+            "v24": 0,
+            "q25": "2.0",
+            "v25": 193.58
+        },
+        {
+            "ticker": "CVBI11",
+            "nome": "CVBI11",
+            "q24": "Ref .DEC",
+            "v24": 0,
+            "q25": "3.0",
+            "v25": 246.15
+        },
+        {
+            "ticker": "PETR4F",
+            "nome": "PETR4F",
+            "q24": "Ref .DEC",
+            "v24": 0,
+            "q25": "51.0",
+            "v25": 1836.16
+        },
+        {
+            "ticker": "EZTC3F",
+            "nome": "EZTC3F",
+            "q24": "Ref .DEC",
+            "v24": 0,
+            "q25": "36.0",
+            "v25": 497.69
+        },
+        {
+            "ticker": "BMGB4F",
+            "nome": "BMGB4F",
+            "q24": "Ref .DEC",
+            "v24": 0,
+            "q25": "50.0",
+            "v25": 190.5
+        },
+        {
+            "ticker": "BMGB4",
+            "nome": "BMGB4",
+            "q24": "Ref .DEC",
+            "v24": 0,
+            "q25": "500.0",
+            "v25": 1895.0
+        },
+        {
+            "ticker": "ISAE4F",
+            "nome": "ISAE4F",
+            "q24": "Ref .DEC",
+            "v24": 0,
+            "q25": "10.0",
+            "v25": 232.3
+        },
+        {
+            "ticker": "AUPO11",
+            "nome": "AUPO11",
+            "q24": "Ref .DEC",
+            "v24": 0,
+            "q25": "124.0",
+            "v25": 12438.55
+        }
+    ],
+    "proventos": [
+        {
+            "ticker": "CXSE3",
+            "dividendos": 510.59,
+            "jcp": 0
+        },
+        {
+            "ticker": "ISAE4",
+            "dividendos": 0,
+            "jcp": 371.02
+        },
+        {
+            "ticker": "AURE3",
+            "dividendos": 7.87,
+            "jcp": 0
+        },
+        {
+            "ticker": "TASA3",
+            "dividendos": 7.47,
+            "jcp": 0
+        },
+        {
+            "ticker": "WEGE3",
+            "dividendos": 9.47,
+            "jcp": 8.27
+        },
+        {
+            "ticker": "ABEV3",
+            "dividendos": 1.59,
+            "jcp": 0
+        },
+        {
+            "ticker": "BBDC3",
+            "dividendos": 0,
+            "jcp": 424.79
+        },
+        {
+            "ticker": "SAPR3",
+            "dividendos": 0,
+            "jcp": 25.15
+        },
+        {
+            "ticker": "ELET3",
+            "dividendos": 175.78,
+            "jcp": 0
+        },
+        {
+            "ticker": "BBSE3",
+            "dividendos": 433.64,
+            "jcp": 0
+        },
+        {
+            "ticker": "SANB3",
+            "dividendos": 0,
+            "jcp": 119.32
+        },
+        {
+            "ticker": "CMIG4",
+            "dividendos": 460.28,
+            "jcp": 97.37
+        },
+        {
+            "ticker": "TAEE11",
+            "dividendos": 176.09,
+            "jcp": 170.39
+        },
+        {
+            "ticker": "BBAS3",
+            "dividendos": 19.37,
+            "jcp": 134.46
+        },
+        {
+            "ticker": "BBDC4",
+            "dividendos": 0,
+            "jcp": 1637.71
+        },
+        {
+            "ticker": "ITUB3",
+            "dividendos": 1.86,
+            "jcp": 0.69
+        },
+        {
+            "ticker": "KLBN4",
+            "dividendos": 72.82,
+            "jcp": 16.34
+        },
+        {
+            "ticker": "PETR4",
+            "dividendos": 64.31,
+            "jcp": 47.05
+        },
+        {
+            "ticker": "HGLG11",
+            "dividendos": 557.7,
+            "jcp": 0
+        },
+        {
+            "ticker": "KNCR11",
+            "dividendos": 2219.95,
+            "jcp": 0
+        },
+        {
+            "ticker": "RBRR11",
+            "dividendos": 969.46,
+            "jcp": 0
+        },
+        {
+            "ticker": "TVRI11",
+            "dividendos": 1180.69,
+            "jcp": 0
+        },
+        {
+            "ticker": "XPLG11",
+            "dividendos": 2168.4,
+            "jcp": 0
+        },
+        {
+            "ticker": "BTHF11",
+            "dividendos": 1451.82,
+            "jcp": 0
+        },
+        {
+            "ticker": "VISC11",
+            "dividendos": 452.31,
+            "jcp": 0
+        },
+        {
+            "ticker": "IRDM11",
+            "dividendos": 468.18,
+            "jcp": 0
+        },
+        {
+            "ticker": "MXRF11",
+            "dividendos": 342.22,
+            "jcp": 0
+        },
+        {
+            "ticker": "CPTS11",
+            "dividendos": 722.63,
+            "jcp": 0
+        },
+        {
+            "ticker": "ALZR11",
+            "dividendos": 414.35,
+            "jcp": 0
+        },
+        {
+            "ticker": "TRXF11",
+            "dividendos": 519.09,
+            "jcp": 0
+        },
+        {
+            "ticker": "XPML11",
+            "dividendos": 497.72,
+            "jcp": 0
+        },
+        {
+            "ticker": "COCA34",
+            "dividendos": 1.22,
+            "jcp": 0
+        },
+        {
+            "ticker": "BABA34",
+            "dividendos": 0.75,
+            "jcp": 0
+        },
+        {
+            "ticker": "LVBI11",
+            "dividendos": 16.82,
+            "jcp": 0
+        },
+        {
+            "ticker": "CVBI11",
+            "dividendos": 25.2,
+            "jcp": 0
+        },
+        {
+            "ticker": "BMGB4",
+            "dividendos": 0,
+            "jcp": 138.55
+        }
+    ]
+}
