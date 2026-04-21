@@ -23,7 +23,8 @@ class IRPFManager:
             'KLBN4': '89.637.490/0001-45', 'TAEE11': '07.859.971/0001-30',
             'BBSE3': '17.344.597/0001-94', 'CMIG4': '17.155.730/0001-64',
             'SAPR4': '76.484.013/0001-45', 'BBAS3': '00.000.000/0001-91',
-            'CXSE3': '22.543.331/0001-00', 'TVRI11': '14.410.722/0001-29'
+            'CXSE3': '22.543.331/0001-00', 'TVRI11': '14.410.722/0001-29',
+            'ROXO34': '42.699.466/0001-77'
         }
 
     def _clean_value(self, val):
@@ -44,29 +45,29 @@ class IRPFManager:
 
     def parse_dec_file(self):
         if not self.dec_path or not os.path.exists(self.dec_path): return
+        print("--- LENDO DECLARAÇÃO E EXTRAINDO PREÇOS MÉDIOS ---")
         with open(self.dec_path, 'r', encoding='latin-1') as f:
             for line in f:
                 if line.startswith('27'):
                     desc = line[19:400].strip()
                     ticker = self._extract_ticker(desc)
                     if not ticker: continue
-                    q_match = re.search(r'(\d+)\s+(?:ACOES|COTAS|UNIDADES)', desc, re.IGNORECASE)
-                    q24 = int(q_match.group(1)) if q_match else 0
+                    
+                    # Regex ampliada para BDRS e UNIDADES
+                    qtd_match = re.search(r'(\d+)\s+(?:ACOES|COTAS|UNIDADES|BDRS|BDR)', desc, re.IGNORECASE)
+                    q24 = int(qtd_match.group(1)) if qtd_match else 0
+                    
                     pm_unit = self._extract_unit_pm(desc)
                     vals = re.findall(r'(\d{13})', line)
                     v24 = float(vals[-1]) / 100.0 if vals else 0.0
+                    
                     if pm_unit and v24 == 0: v24 = q24 * pm_unit
+                    pm_unit = pm_unit if pm_unit else (v24 / q24 if q24 > 0 else 0)
+
                     self.portfolio[ticker] = {'nome': desc, 'q24': q24, 'v24': v24, 'pm_fix': pm_unit, 'q25': q24, 'v25': v24, 'div': 0, 'jcp': 0, 'fii': 0}
 
     def process_2025(self):
-        # Primeiro, atualizar as quantidades de 2025 lendo as planilhas
-        all_dfs = []
-        if self.neg_path:
-            df = pd.read_excel(self.neg_path); df.columns = [c.strip() for c in df.columns]
-            df['Data'] = pd.to_datetime(df['Data do Negócio'], dayfirst=True)
-            all_dfs.append(df[df['Data'].dt.year == 2025].rename(columns={'Código de Negociação': 'ticker_norm', 'Tipo de Movimentação': 'tipo_mov'}))
-        
-        # Processa Proventos e Bonificações (Quantidade)
+        # Quantidade de 2025
         df_mov = pd.read_excel(self.excel_2025); df_mov.columns = [c.strip() for c in df_mov.columns]
         df_mov['Data'] = pd.to_datetime(df_mov['Data'], dayfirst=True)
         
@@ -98,7 +99,7 @@ class IRPFManager:
         data = {"usuario": {"nome": self.user_nome, "cpf": self.user_cpf}, "ativos": [], "proventos": []}
         for t, d in self.portfolio.items():
             if d['q24'] > 0 or d['q25'] > 0:
-                data["ativos"].append({"ticker": t, "nome": d['nome'], "q24": d['q24'], "v24": round(d['v24'], 2), "q25": int(d['q25']), "v25": round(d['v25'], 2)})
+                data["ativos"].append({"ticker": t, "nome": d['nome'], "q24": int(d['q24']), "v24": round(d['v24'], 2), "q25": int(d['q25']), "v25": round(d['v25'], 2)})
             if d['div'] > 0: data["proventos"].append({"ticker": t, "tipo": "DIVIDENDO", "valor": round(d['div'], 2), "cnpj": self.cnpj_map.get(t, "")})
             if d['fii'] > 0: data["proventos"].append({"ticker": t, "tipo": "FII", "valor": round(d['fii'], 2), "cnpj": self.cnpj_map.get(t, "")})
             if d['jcp'] > 0: data["proventos"].append({"ticker": t, "tipo": "JCP", "valor": round(d['jcp'], 2), "cnpj": self.cnpj_map.get(t, "")})
