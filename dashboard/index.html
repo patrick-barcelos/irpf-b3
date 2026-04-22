@@ -27,12 +27,7 @@
 
         const App = () => {
             const [data, setData] = useState({ usuario: {}, ativos: [], proventos: [] });
-            
-            // Busca persistente no LocalStorage
-            const [searchTerm, setSearchTerm] = useState(() => {
-                return localStorage.getItem('irpf_search_term') || "";
-            });
-
+            const [searchTerm, setSearchTerm] = useState(() => localStorage.getItem('irpf_search_term') || "");
             const [copyFeedback, setCopyFeedback] = useState(null);
             const [checkedItems, setCheckedItems] = useState(() => {
                 const saved = localStorage.getItem('irpf_checked_items');
@@ -45,12 +40,8 @@
 
             useEffect(() => {
                 localStorage.setItem('irpf_checked_items', JSON.stringify(checkedItems));
-            }, [checkedItems]);
-
-            // Salva busca ao mudar
-            useEffect(() => {
                 localStorage.setItem('irpf_search_term', searchTerm);
-            }, [searchTerm]);
+            }, [checkedItems, searchTerm]);
 
             const toggleCheck = (id) => { setCheckedItems(prev => ({ ...prev, [id]: !prev[id] })); };
 
@@ -63,50 +54,56 @@
 
             const formatMoney = (val) => (val || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-            const filteredAtivos = useMemo(() => {
-                return (data.ativos || []).filter(a => 
+            const sortedAtivos = useMemo(() => {
+                let filtered = (data.ativos || []).filter(a => 
                     (a.ticker || "").toLowerCase().includes(searchTerm.toLowerCase()) || 
                     (a.nome || "").toLowerCase().includes(searchTerm.toLowerCase())
                 );
-            }, [data.ativos, searchTerm]);
+                // LOGICA: Marcados como OK (checkedItems[ticker] === true) ficam no TOPO
+                return [...filtered].sort((a, b) => {
+                    const checkA = !!checkedItems[a.ticker];
+                    const checkB = !!checkedItems[b.ticker];
+                    if (checkA === checkB) return 0;
+                    return checkA ? -1 : 1;
+                });
+            }, [data.ativos, searchTerm, checkedItems]);
 
-            const filteredProventos = useMemo(() => {
-                return (data.proventos || []).filter(p => (p.ticker || "").toLowerCase().includes(searchTerm.toLowerCase()));
-            }, [data.proventos, searchTerm]);
+            const sortedProventos = useMemo(() => {
+                let filtered = (data.proventos || []).filter(p => (p.ticker || "").toLowerCase().includes(searchTerm.toLowerCase()));
+                return [...filtered].sort((a, b) => {
+                    const idA = `${a.tipo}-${a.ticker}`;
+                    const idB = `${b.tipo}-${b.ticker}`;
+                    const checkA = !!checkedItems[idA];
+                    const checkB = !!checkedItems[idB];
+                    if (checkA === checkB) return 0;
+                    return checkA ? -1 : 1;
+                });
+            }, [data.proventos, searchTerm, checkedItems]);
 
             return (
                 <div class="min-h-screen p-6 max-w-7xl mx-auto relative">
                     {copyFeedback && <div className="fixed z-[9999] bg-indigo-600 text-white text-[10px] font-bold px-2 py-1 rounded shadow-xl copy-feedback" style={{ left: copyFeedback.x, top: copyFeedback.y }}>{copyFeedback.text}</div>}
 
                     <header class="mb-8 flex flex-col md:flex-row justify-between items-center bg-white p-6 rounded-2xl shadow-sm border border-slate-100 gap-4">
-                        <div><h1 class="text-2xl font-black text-slate-800 tracking-tight leading-none text-center md:text-left">IRPF <span class="text-indigo-600">2026</span></h1><p class="text-slate-400 text-[10px] mt-1 font-black tracking-widest uppercase">Investimentos Dashboard</p></div>
-                        <div class="relative w-full md:w-96">
-                            <i class="fa fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                            <input 
-                                type="text" 
-                                placeholder="Buscar ticker ou nome..." 
-                                class="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all text-sm font-medium" 
-                                value={searchTerm} 
-                                onChange={(e) => setSearchTerm(e.target.value)} 
-                            />
-                        </div>
+                        <div><h1 class="text-2xl font-black text-slate-800 tracking-tight leading-none">IRPF <span class="text-indigo-600">2026</span></h1><p class="text-slate-400 text-[10px] mt-1 font-black tracking-widest uppercase text-center md:text-left">Investimentos Dashboard</p></div>
+                        <div class="relative w-full md:w-96"><i class="fa fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i><input type="text" placeholder="Buscar em todas as fichas..." class="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all text-sm font-medium" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} /></div>
                         <div class="text-right hidden md:block text-xs font-bold text-slate-700 uppercase tracking-tighter cursor-pointer hover:text-indigo-600" onClick={(e) => copyToClipboard(data.usuario.nome, e)}>{data.usuario.nome}<br/><span class="text-slate-400 font-black">CPF: {data.usuario.cpf}</span></div>
                     </header>
 
-                    <Section title="Bens e Direitos" icon="fa-vault" color="bg-indigo-600">
-                        <table class="w-full text-xs text-left">
+                    <Section title="Ficha: Bens e Direitos (OK no Topo)" icon="fa-vault" color="bg-indigo-600">
+                        <table class="w-full text-xs text-left border-collapse">
                             <thead class="bg-slate-50 text-slate-400 uppercase font-black tracking-widest border-b border-slate-100">
-                                <tr><th class="p-4">Ativo</th><th class="p-4 text-center">Qtd 24</th><th class="p-4 text-right">Saldo 24</th><th class="p-4 text-center">Qtd 25</th><th class="p-4 text-right">Saldo 25</th><th class="p-4 text-center w-16">Ok</th></tr>
+                                <tr><th class="p-4">Ativo</th><th class="p-4 text-center">Qtd 24</th><th class="p-4 text-right">Saldo 24</th><th class="p-4 text-center">Qtd 25</th><th class="p-4 text-right">Saldo 25</th><th class="p-4 text-center w-16 text-indigo-600">Ok?</th></tr>
                             </thead>
                             <tbody class="divide-y divide-slate-100">
-                                {filteredAtivos.map(a => (
-                                    <tr key={a.ticker} class={`transition-all duration-200 ${checkedItems[a.ticker] ? 'bg-emerald-50/40 opacity-60' : 'hover:bg-indigo-50/20'}`}>
-                                        <td class="p-4"><span class={`font-black cursor-pointer ${checkedItems[a.ticker] ? 'line-through text-slate-400' : 'text-indigo-900'}`} onClick={(e) => copyToClipboard(a.ticker, e)}>{a.ticker}</span><br/><small class="text-slate-400 cursor-pointer" onClick={(e) => copyToClipboard(a.nome, e)}>{(a.nome || "").slice(0,50)}</small></td>
+                                {sortedAtivos.map(a => (
+                                    <tr key={a.ticker} class={`transition-all duration-300 ${checkedItems[a.ticker] ? 'bg-emerald-50/40 opacity-50 grayscale-[0.5]' : 'hover:bg-indigo-50/20'}`}>
+                                        <td class="p-4"><span class={`font-black cursor-pointer ${checkedItems[a.ticker] ? 'line-through text-slate-400' : 'text-indigo-900'}`} onClick={(e) => copyToClipboard(a.ticker, e)}>{a.ticker}</span><br/><small class="text-slate-400 cursor-pointer" onClick={(e) => copyToClipboard(a.nome, e)}>{(a.nome || "").slice(0,55)}</small></td>
                                         <td class="p-4 text-center text-slate-500">{a.q24}</td>
-                                        <td class="p-4 text-right font-mono text-slate-500 cursor-pointer" onClick={(e) => copyToClipboard(formatMoney(a.v24), e)}>R$ {formatMoney(a.v24)}</td>
+                                        <td class="p-4 text-right font-mono text-slate-500 cursor-pointer hover:bg-slate-100" onClick={(e) => copyToClipboard(formatMoney(a.v24), e)}>R$ {formatMoney(a.v24)}</td>
                                         <td class="p-4 text-center font-bold text-slate-700">{a.q25}</td>
-                                        <td class="p-4 text-right font-black text-slate-900 cursor-pointer" onClick={(e) => copyToClipboard(formatMoney(a.v25), e)}>R$ {formatMoney(a.v25)}</td>
-                                        <td class="p-4 text-center"><input type="checkbox" class="w-5 h-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer" checked={!!checkedItems[a.ticker]} onChange={() => toggleCheck(a.ticker)} /></td>
+                                        <td class="p-4 text-right font-black text-slate-900 cursor-pointer hover:bg-slate-100" onClick={(e) => copyToClipboard(formatMoney(a.v25), e)}>R$ {formatMoney(a.v25)}</td>
+                                        <td class="p-4 text-center"><input type="checkbox" class="w-5 h-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer transition-all" checked={!!checkedItems[a.ticker]} onChange={() => toggleCheck(a.ticker)} /></td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -114,38 +111,42 @@
                     </Section>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-                        <Section title="Rendimentos Isentos (Div/FII)" icon="fa-hand-holding-heart" color="bg-emerald-500">
-                            <table class="w-full text-[11px]">
-                                <thead class="bg-slate-50 text-slate-400 uppercase font-black tracking-widest border-b border-slate-100">
-                                    <tr><th class="p-4">Ativo</th><th class="p-4">CNPJ Fonte</th><th class="p-4 text-right">Valor</th><th class="p-4 text-center w-12">Ok</th></tr>
+                        <Section title="Rendimentos Isentos" icon="fa-hand-holding-heart" color="bg-emerald-500">
+                            <table class="w-full text-xs">
+                                <thead class="bg-slate-50 text-slate-400 uppercase font-black border-b border-slate-100">
+                                    <tr><th class="p-4">Ativo</th><th class="p-4 text-right">Valor</th><th class="p-4 text-center w-16 text-emerald-600">Ok</th></tr>
                                 </thead>
                                 <tbody class="divide-y divide-slate-100">
-                                    {filteredProventos.filter(p => p.dividendos > 0).map(p => (
-                                        <tr key={`div-${p.ticker}`} class={checkedItems[`div-${p.ticker}`] ? 'bg-emerald-50/50 opacity-60' : ''}>
-                                            <td class="p-4 font-bold">{p.ticker}</td>
-                                            <td class="p-4 font-mono text-slate-500 cursor-pointer hover:text-indigo-600" onClick={(e) => copyToClipboard(p.cnpj, e)}>{p.cnpj}</td>
-                                            <td class="p-4 text-right text-emerald-600 font-black cursor-pointer" onClick={(e) => copyToClipboard(formatMoney(p.dividendos), e)}>R$ {formatMoney(p.dividendos)}</td>
-                                            <td class="p-4 text-center"><input type="checkbox" checked={!!checkedItems[`div-${p.ticker}`]} onChange={() => toggleCheck(`div-${p.ticker}`)} /></td>
-                                        </tr>
-                                    ))}
+                                    {sortedProventos.filter(p => p.tipo !== "JCP").map(p => {
+                                        const id = `${p.tipo}-${p.ticker}`;
+                                        return (
+                                            <tr key={id} class={`transition-all duration-300 ${checkedItems[id] ? 'bg-emerald-50/50 opacity-40 grayscale' : 'hover:bg-emerald-50/20'}`}>
+                                                <td class="p-4 font-bold cursor-pointer" onClick={(e) => copyToClipboard(p.ticker, e)}>{p.ticker}<br/><small class="text-slate-400 font-mono" onClick={(e) => copyToClipboard(p.cnpj, e)}>{p.cnpj}</small></td>
+                                                <td class="p-4 text-right text-emerald-600 font-black cursor-pointer" onClick={(e) => copyToClipboard(formatMoney(p.dividendos), e)}>R$ {formatMoney(p.dividendos)}</td>
+                                                <td class="p-4 text-center"><input type="checkbox" class="w-4 h-4 text-emerald-600" checked={!!checkedItems[id]} onChange={() => toggleCheck(id)} /></td>
+                                            </tr>
+                                        );
+                                    })}
                                 </tbody>
                             </table>
                         </Section>
 
-                        <Section title="Tributação Exclusiva (JCP)" icon="fa-percent" color="bg-orange-500">
-                            <table class="w-full text-[11px]">
-                                <thead class="bg-slate-50 text-slate-400 uppercase font-black tracking-widest border-b border-slate-100">
-                                    <tr><th class="p-4">Ativo</th><th class="p-4">CNPJ Fonte</th><th class="p-4 text-right">Valor</th><th class="p-4 text-center w-12">Ok</th></tr>
+                        <Section title="JCP (Exclusiva)" icon="fa-percent" color="bg-orange-500">
+                            <table class="w-full text-xs">
+                                <thead class="bg-slate-50 text-slate-400 uppercase font-black border-b border-slate-100">
+                                    <tr><th class="p-4">Ativo</th><th class="p-4 text-right">Valor</th><th class="p-4 text-center w-16 text-orange-600">Ok</th></tr>
                                 </thead>
                                 <tbody class="divide-y divide-slate-100">
-                                    {filteredProventos.filter(p => p.jcp > 0).map(p => (
-                                        <tr key={`jcp-${p.ticker}`} class={checkedItems[`jcp-${p.ticker}`] ? 'bg-orange-50/50 opacity-60' : ''}>
-                                            <td class="p-4 font-bold">{p.ticker}</td>
-                                            <td class="p-4 font-mono text-slate-500 cursor-pointer hover:text-indigo-600" onClick={(e) => copyToClipboard(p.cnpj, e)}>{p.cnpj}</td>
-                                            <td class="p-4 text-right text-orange-600 font-black cursor-pointer" onClick={(e) => copyToClipboard(formatMoney(p.jcp), e)}>R$ {formatMoney(p.jcp)}</td>
-                                            <td class="p-4 text-center"><input type="checkbox" checked={!!checkedItems[`jcp-${p.ticker}`]} onChange={() => toggleCheck(`jcp-${p.ticker}`)} /></td>
-                                        </tr>
-                                    ))}
+                                    {sortedProventos.filter(p => p.tipo === "JCP").map(p => {
+                                        const id = `${p.tipo}-${p.ticker}`;
+                                        return (
+                                            <tr key={id} class={`transition-all duration-300 ${checkedItems[id] ? 'bg-orange-50/40 opacity-40 grayscale' : 'hover:bg-orange-50/10'}`}>
+                                                <td class="p-4 font-bold cursor-pointer" onClick={(e) => copyToClipboard(p.ticker, e)}>{p.ticker}<br/><small class="text-slate-400 font-mono" onClick={(e) => copyToClipboard(p.cnpj, e)}>{p.cnpj}</small></td>
+                                                <td class="p-4 text-right text-orange-600 font-black cursor-pointer" onClick={(e) => copyToClipboard(formatMoney(p.jcp), e)}>R$ {formatMoney(p.jcp)}</td>
+                                                <td class="p-4 text-center"><input type="checkbox" class="w-4 h-4 text-orange-600" checked={!!checkedItems[id]} onChange={() => toggleCheck(id)} /></td>
+                                            </tr>
+                                        );
+                                    })}
                                 </tbody>
                             </table>
                         </Section>
@@ -156,7 +157,7 @@
 
         const Section = ({ title, icon, color, children }) => (
             <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden mb-6">
-                <div class="p-4 flex items-center gap-3 border-b border-slate-50"><div class={`${color} p-2 rounded-lg text-white w-10 h-10 flex items-center justify-center shadow-lg shadow-current/10`}><i class={`fa ${icon}`}></i></div><h2 class="font-black text-slate-800 uppercase text-[10px] tracking-tight">{title}</h2></div>
+                <div class="p-4 flex items-center gap-3 border-b border-slate-50 shadow-sm"><div class={`${color} p-2 rounded-xl text-white w-10 h-10 flex items-center justify-center shadow-lg shadow-current/10`}><i class={`fa ${icon}`}></i></div><h2 class="font-black text-slate-800 uppercase text-[10px] tracking-tight">{title}</h2></div>
                 <div class="overflow-x-auto">{children}</div>
             </div>
         );
